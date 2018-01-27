@@ -1,20 +1,26 @@
+// Import frameworks
 const express = require('express');
 const router = new express.Router();
+const fs = require("fs");
+
+// Isolate clubs from json file
+const clubs = fs.readFileSync("club_list.json");
+// Define to JSON type
+ const jsonClubs = JSON.parse(clubs);
 
 router.get('/', (req, res) => {
   res.send('Welcome to the PennClubReview API!');
 });
 
 // Route to list all the clubs
-// TODO implement
 router.get('/clubs', (req, res) => {
-  res.send('List of clubs!');
+  res.json({"clubs": jsonClubs});
 });
 
 // Route to create a new club
 // TODO implement
 router.post('/clubs', (req, res) => {
-  res.send('Create a new club!.');
+  res.send('Create a new club!');
 });
 
 // Route to change the ranking of a specified club
@@ -33,6 +39,16 @@ router.get('/rankings', (req, res) => {
 // TODO implement
 router.get('/user/:id', (req, res) => {
   res.send('Given user.');
+});
+
+// Route to view input fields for creating a new user
+router.get('/input', (req, res) => {
+  res.render('main');
+});
+
+// TODO implement
+router.post('/input', (req, res) => {
+  res.send('Need to implement.');
 });
 
 router.post('/', (req, res) => {
