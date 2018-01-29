@@ -22,7 +22,7 @@ router.get('/clubs', (req, res) => {
     if (err) {
       res.send({success: false, error: err.message});
     } else {
-      res.json({"clubs": clubs});
+      res.json(clubs);
     }
   });
 });
@@ -304,10 +304,7 @@ router.get('/users', (req, res) => {
       u.forEach((user) => {
         users.push({name: user.name, userId: user._id});
       });
-      res.send({
-        success: true,
-        data: users,
-      });
+      res.json(users);
     }
   })
 });

@@ -3,26 +3,82 @@
 
 <head>
   <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PennClubReview</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
 </head>
 
 <body>
-  Create a new user
-  <form action="/api/user/new" method="post">
-    Full name: <input type="text" name="name"><br> Username: <input type="text" name="username"><br> Password: <input type="password" name="password"><br>
-    <input type="submit" value="Submit"> <br><br>
-  </form> <br> Rank your clubs
-  <form action="/api/rankings" method="post">
-    Enter name of club: <input type="text" name="name"> <br> Enter ranking #: <input type="number" name="ranking"><br>
-    <input type="submit" value="Submit"> <br><br> Club list <br><br>
-    {{#each clubs}}
-      {{name}} <br>
-    {{/each}}
-  </form> <br> Add a club
-  <form action="/api/clubs" method="post">
-    Club name: <input type="text" name="name"><br> Size: <input type="text" name="size"><br>
-    <input type="submit" value="Submit">
-  </form>
+  <div class="container" style="margin-top: 1rem">
+    <div class="row">
+      <div class="col-12 col-lg-4">
+        <h2>
+          Create a new user
+        </h2>
+        <form action="/api/user/new" method="post">
+          <label>
+            Full name
+          </label>
+          <input type="text" name="name" class="form-control"><br>
+
+          <label>
+            Username
+          </label>
+          <input type="text" name="username" class="form-control"><br>
+
+          <label>
+            Password
+          </label>
+          <input type="password" name="password" class="form-control"><br>
+
+          <input type="submit" value="Submit" class="btn btn-primary">
+        </form>
+      </div>
+      <div class="col-12 col-md-4">
+        <h2>
+          Rank your clubs
+        </h2>
+        <form action="/api/rankings" method="post">
+          <label>
+            Enter name of club
+          </label>
+          <input type="text" name="name" class="form-control"> <br>
+          <label>
+            Enter ranking #
+          </label>
+          <input type="number" name="ranking" class="form-control"><br>
+          <input type="submit" value="Submit" class="btn btn-primary"> <br><br>
+          <h3>
+            Club list
+          </h3>
+          {{#each clubs}}
+            {{name}} <br>
+          {{/each}}
+        </form>
+      </div>
+      <div class="col-12 col-md-4">
+        <h2>
+          Add a club
+        </h2>
+        <form action="/api/clubs" method="post">
+          <label>
+            Club name
+          </label>
+          <input type="text" name="name" class="form-control"><br>
+          <label>
+            Size
+          </label>
+          <input type="text" name="size" class="form-control"><br>
+          <input type="submit" value="Submit" class="btn btn-primary">
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
 </body>
 
 </html>
