@@ -18,3 +18,4 @@ Features
 - send ({success:false.....}) object
 - error check adding new club (cant be same)
 - beautify
+- new club updates in jenn

@@ -1,37 +1,14 @@
 // Import frameworks
 const express = require('express');
 const router = new express.Router();
-const fs = require("fs");
 const bCrypt = require('bcrypt-nodejs');
 
 // Import mongo models
 const Club = require('./models/club');
 const User = require('./models/user');
 
-// Isolate clubs from json file
-let clubs = {};
-fs.readFile("club_list.json", (err, data) => {
-  if (err) {
-    res.send({
-      error: err,
-    })
-  } else {
-    clubs = JSON.parse(data);
-  }
-});
-
-// Isolate Jennifer from json file
-let jennifer = {};
-fs.readFile("jennifer.json", (err, data) => {
-  if (err) {
-    res.send({
-      success: false,
-      error: err,
-    })
-  } else {
-    jennifer = JSON.parse(data);
-  }
-});
+// Import Jennifer's id from env.sh file
+const jennId = process.env.jennId;
 
 router.get('/', (req, res) => {
   res.send({
@@ -42,53 +19,38 @@ router.get('/', (req, res) => {
 
 // Route to list all the clubs
 router.get('/clubs', (req, res) => {
-  Club.find({}, (err, c) => {
+  Club.find({}, (err, clubs) => {
     if (err) {
       res.send({
         success: false,
         error: err.message,
       });
     } else {
-      res.json({"clubs": c});
+      res.json({"clubs": clubs});
     }
   });
 });
 
 // Route to create a new club
-// NOTE writes to JSON file AND stores in Mongo
 router.post('/clubs', (req, res) => {
-  // Pull new club info and add to existing clubs
-  clubs.push(req.body);
-  // Convert from obj to string
-  const newClubList = JSON.stringify(clubs);
-  // Write newClubList to file
-  fs.writeFile('club_list.json', newClubList, 'utf8', (err) => {
+  // Declare new club
+  const newClub = new Club({
+    name: req.body.name,
+    size: req.body.size,
+  });
+  // Save in Mongo
+  newClub.save((err) => {
     if (err) {
       res.send({
         success: false,
-        error: err,
+        error: err.message,
       });
     } else {
-      // Declare new club
-      const newClub = new Club({
-        name: req.body.name,
-        size: req.body.size,
+      // TODO update in jennifer as well
+      res.send({
+        success: true,
+        data: 'New club ' + newClub.name + " created!",
       });
-      // Save in Mongo
-      newClub.save((err) => {
-        if (err) {
-          res.send({
-            success: false,
-            error: err.message,
-          });
-        } else {
-          // TODO update in jennifer as well
-          res.send({
-            success: true,
-            data: 'New club ' + newClub.name + " created!",
-          });
-        }
-      })
     }
   });
 });
@@ -99,73 +61,84 @@ router.post('/rankings', (req, res) => {
   // Isolate variables
   const clubRanking = req.body.ranking;
   const name = req.body.name;
-  const clubs = jennifer.rankings;
 
-  // Error check for proper ranking entering
-  if (clubRanking < 1 || clubRanking > clubs.length) {
-    res.send({
-      success: false,
-      error: 'Ranking must be in range ' + 1 + '-' + clubs.length,
-    })
-  // Error checking to ensure club name entered is in list
-  } else {
-    let isPresent = false;
-    let oldIndex = -1;
-    for (var i = 0; i < clubs.length; i++) {
-      // To ignore cases
-      if (clubs[i].name.toLowerCase() === name.toLowerCase()) {
-        isPresent = true;
-        oldIndex = i;
-      }
-    }
-    if (!isPresent) {
+  // Find Jenn in mongo
+  User.findById(jennId, (err, user) => {
+    if (err) {
       res.send({
         success: false,
-        error: 'Club ' + name + ' is not on the list.',
+        error: err.message,
       });
     } else {
-      const newIndex = clubRanking - 1;
-      // Updates the position of the club
-      clubs.splice(newIndex, 0, clubs.splice(oldIndex, 1)[0]);
-      // Update Jennifer's rankings
-      // TODO password security
-      const jenniferUpdated = {
-        fullname: jennifer.fullname,
-        username: jennifer.username,
-        password: jennifer.password,
-        rankings: clubs,
-      }
-      // Convert from obj to string
-      const jenniferUpdatedStringified = JSON.stringify(jenniferUpdated);
-
-      fs.writeFile('jennifer.json', jenniferUpdatedStringified, 'utf8', (err) => {
-        if (err) {
+      const clubs = user.rankings;
+      // Error check for proper ranking entering
+      if (clubRanking < 1 || clubRanking > clubs.length) {
+        res.send({
+          success: false,
+          error: 'Ranking must be in range ' + 1 + '-' + clubs.length,
+        })
+      // Error checking to ensure club name entered is in list
+      } else {
+        let isPresent = false;
+        let oldIndex = -1;
+        for (var i = 0; i < clubs.length; i++) {
+          // To ignore cases
+          if (clubs[i].name.toLowerCase() === name.toLowerCase()) {
+            isPresent = true;
+            oldIndex = i;
+          }
+        }
+        if (!isPresent) {
           res.send({
             success: false,
-            error: err,
+            error: 'Club ' + name + ' is not on the list.',
           });
         } else {
-          res.send({
-            success: true,
-            data: name + ' is now ranked #' + clubRanking + "!",
+          const newIndex = clubRanking - 1;
+          // Updates the position of the club
+          clubs.splice(newIndex, 0, clubs.splice(oldIndex, 1)[0]);
+          // Update the order of the user's ranking
+          user.rankings = clubs;
+          // Save changes in Mongo
+          user.save((err) => {
+            if (err) {
+              res.send({
+                success: false,
+                error: err.message,
+              });
+            } else {
+              res.send({
+                success: true,
+                data: name + ' is now ranked #' + clubRanking + "!",
+              });
+            }
           });
-        };
-      });
+        }
+      }
     }
-  }
+  });
 });
 
 // Route to list the rankings of the clubs
-// TODO implement with pulling jennifer from mongo, not json
 router.get('/rankings', (req, res) => {
-  const clubs = jennifer.rankings;
-  const rankings = [];
-  // Display the ranking and club name
-  for (var i = 0; i < clubs.length; i++) {
-    rankings.push({"ranking": i + 1, "club": clubs[i].name});
-  }
-  // Send back rankings
-  res.json(rankings);
+  // Find Jenn in Mongo
+  User.findById(jennId, (err, user) => {
+    if (err) {
+      res.send({
+        success: false,
+        error: err.message,
+      });
+    } else {
+      const clubs = user.rankings;
+      const rankings = [];
+      // Display the ranking and club name nicely
+      for (var i = 0; i < clubs.length; i++) {
+        rankings.push({"ranking": i + 1, "club": clubs[i].name});
+      }
+      // Send back rankings
+      res.json(rankings);
+    }
+  });
 });
 
 // Route to return a given user
@@ -233,7 +206,7 @@ router.post('/user/new', (req, res) => {
         } else {
           res.send({
             success: true,
-            data: 'New user ' + req.body.fullname + ' created. Access his/her information at the route: api/user' + user._id,
+            data: 'New user ' + req.body.fullname + ' created. Access his/her information at the route: api/user/' + user._id,
           });
         }
       });

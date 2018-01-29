@@ -4,24 +4,10 @@ const routes = require('./routes');
 const app = express();
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
-const fs = require("fs");
 
 // Import mongo models
 const Club = require('./models/club');
 const User = require('./models/user');
-
-// Isolate clubs from json file
-let clubs = {};
-fs.readFile("club_list.json", (err, data) => {
-  if (err) {
-    res.send({
-      success: false,
-      error: err,
-    })
-  } else {
-    clubs = JSON.parse(data);
-  }
-});
 
 // Connecting to mongo
 const connect = process.env.MONGODB_URI;
