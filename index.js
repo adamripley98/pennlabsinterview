@@ -19,7 +19,7 @@ app.set('view engine', '.hbs');
 
 // Body parser middleware
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
 
 app.use('/api', routes);
 
@@ -28,14 +28,9 @@ app.get('/', (req, res) => {
   // Pull all clubs from Mongo
   Club.find({}, (err, c) => {
     if (err) {
-      res.send({
-        success: false,
-        error: err.message,
-      });
+      res.send({success: false, error: err.message});
     } else {
-      res.render('main',
-        {clubs: c}
-      );
+      res.render('main', {clubs: c});
     }
   });
 });
