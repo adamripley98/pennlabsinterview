@@ -2,6 +2,7 @@
 const express = require('express');
 const router = new express.Router();
 const fs = require("fs");
+const bCrypt = require('bcrypt-nodejs');
 
 // Import mongo models
 const Club = require('./models/club');
@@ -24,6 +25,7 @@ let jennifer = {};
 fs.readFile("jennifer.json", (err, data) => {
   if (err) {
     res.send({
+      success: false,
       error: err,
     })
   } else {
@@ -32,15 +34,28 @@ fs.readFile("jennifer.json", (err, data) => {
 });
 
 router.get('/', (req, res) => {
-  res.send('Welcome to the PennClubReview API!');
+  res.send({
+    success: true,
+    data: 'Welcome to the PennClubReview API!',
+  });
 });
 
 // Route to list all the clubs
 router.get('/clubs', (req, res) => {
-  res.json({"clubs": clubs});
+  Club.find({}, (err, c) => {
+    if (err) {
+      res.send({
+        success: false,
+        error: err.message,
+      });
+    } else {
+      res.json({"clubs": c});
+    }
+  });
 });
 
 // Route to create a new club
+// NOTE writes to JSON file AND stores in Mongo
 router.post('/clubs', (req, res) => {
   // Pull new club info and add to existing clubs
   clubs.push(req.body);
@@ -50,21 +65,28 @@ router.post('/clubs', (req, res) => {
   fs.writeFile('club_list.json', newClubList, 'utf8', (err) => {
     if (err) {
       res.send({
-        error: "Error adding club."
+        success: false,
+        error: err,
       });
     } else {
+      // Declare new club
       const newClub = new Club({
         name: req.body.name,
         size: req.body.size,
       });
+      // Save in Mongo
       newClub.save((err) => {
         if (err) {
           res.send({
+            success: false,
             error: err.message,
           });
         } else {
           // TODO update in jennifer as well
-          res.send('New club ' + newClub.name + " created!");
+          res.send({
+            success: true,
+            data: 'New club ' + newClub.name + " created!",
+          });
         }
       })
     }
@@ -120,7 +142,7 @@ router.post('/rankings', (req, res) => {
         if (err) {
           res.send({
             success: false,
-            error: "Error changing rating.",
+            error: err,
           });
         } else {
           res.send({
@@ -147,31 +169,74 @@ router.get('/rankings', (req, res) => {
 });
 
 // Route to return a given user
-// TODO implement
 router.get('/user/:id', (req, res) => {
-  res.send('Given user.');
+  User.findById(req.params.id, (err, u) => {
+    if (err) {
+      res.send({
+        success: false,
+        error: err.message,
+      });
+    } else if (!u) {
+      res.send({
+        success: false,
+        error: 'User with id ' + req.params.id + ' not found.',
+      });
+    } else {
+      // Choose which data to send, obviously don't want to display password.
+      const user = {
+        username: u.username,
+        name: u.name,
+        userId: u._id,
+        rankings: u.rankings,
+      };
+      res.send({
+        success: true,
+        data: user,
+      });
+    }
+  });
 });
 
 // Route to create a new user
-// TODO implement
 router.post('/user/new', (req, res) => {
   console.log(req.body);
-  // TODO encrypt password
-  // TODO do something with rankings
-  // Create a new user with given params
-  const newUser = new User({
-    fullname: req.body.fullname,
-    username: req.body.username,
-    password: req.body.password,
-  });
-  // Save new user
-  newUser.save((err) => {
-    if (err) {
+  // Generates hash using bCrypt, storing password safely
+   const createHash = (password) => {
+     return bCrypt.hashSync(password, bCrypt.genSaltSync(10), null);
+   };
+
+  // Find all clubs to add to user
+  Club.find({}, (errClub, clubs) => {
+    if (errClub) {
       res.send({
-        error: err.message,
+        success: false,
+        error: errClub,
       });
     } else {
-      res.send('New user ' + req.body.fullname + ' created.');
+       // Create a new user with given params
+       // NOTE password is hashed to store securely
+       // NOTE rankings are default the order in which they are in Mongo
+       // TODO display clubs better, only pass back some data
+       const newUser = new User({
+         fullname: req.body.fullname,
+         username: req.body.username,
+         password: createHash(req.body.password),
+         rankings: clubs,
+       });
+      // Save new user in Mongo
+      newUser.save((err, user) => {
+        if (err) {
+          res.send({
+            success: false,
+            error: err.message,
+          });
+        } else {
+          res.send({
+            success: true,
+            data: 'New user ' + req.body.fullname + ' created. Access his/her information at the route: api/user' + user._id,
+          });
+        }
+      });
     }
   });
 });
