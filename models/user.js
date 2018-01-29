@@ -7,6 +7,7 @@ const userSchema = new Schema({
   name: String,
   username: String,
   password: String,
+  rankings: [],
 });
 
 /**
