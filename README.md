@@ -2,10 +2,11 @@
 
 __Technology used:__
 * `Node` JavaScript on the backend
-* `Express` backend API library
-* `MongoDB` database
-* `Handlebars` Templating engine
+* `Express` Backend API library
+* `MongoDB` Database
 * `BCrypt` Secure password storing
+* `Bootstrap` Frontend framework
+* `Handlebars` Templating engine
 
 To run the application, set up an `env.sh` connecting to Mongo. Run `npm install`,`source env.sh` and `nodemon index.js`.
 
